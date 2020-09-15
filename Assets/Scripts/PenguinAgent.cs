@@ -88,7 +88,8 @@ public class PenguinAgent : Agent
         }
 
         // Put the actions into an array and return
-        actionsOut = new float[] { forwardAction, turnAction };
+        actionsOut[0] = forwardAction;
+        actionsOut[1] = turnAction;
     }
 
     /// <summary>
