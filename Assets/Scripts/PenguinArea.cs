@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using MLAgents;
+using Unity.MLAgents;
 using TMPro;
 
 public class PenguinArea : MonoBehaviour
@@ -27,7 +27,8 @@ public class PenguinArea : MonoBehaviour
         RemoveAllFish();
         PlacePenguin();
         PlaceBaby();
-        SpawnFish(4, Academy.Instance.FloatProperties.GetPropertyWithDefault("fish_speed", 0.5f));
+        //SpawnFish(4, Academy.Instance.FloatProperties.GetPropertyWithDefault("fish_speed", 0.5f));
+        SpawnFish(4, Academy.Instance.EnvironmentParameters.GetWithDefault("fish_speed", 0.5f));
     }
 
     /// <summary>

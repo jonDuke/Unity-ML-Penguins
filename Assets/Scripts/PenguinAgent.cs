@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
-using MLAgents;
+using Unity.MLAgents;
+using Unity.MLAgents.Sensors;
 
 public class PenguinAgent : Agent
 {
@@ -24,9 +25,9 @@ public class PenguinAgent : Agent
     /// <summary>
     /// Initial setup, called when the agent is enabled
     /// </summary>
-    public override void InitializeAgent()
+    public override void Initialize()
     {
-        base.InitializeAgent();
+        base.Initialize();
         penguinArea = GetComponentInParent<PenguinArea>();
         baby = penguinArea.penguinBaby;
         rigidbody = GetComponent<Rigidbody>();
@@ -36,7 +37,7 @@ public class PenguinAgent : Agent
     /// Perform actions based on a vector of numbers
     /// </summary>
     /// <param name="vectorAction">The list of actions to take</param>
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         // Convert the first action to forward movement
         float forwardAmount = vectorAction[0];
@@ -57,7 +58,7 @@ public class PenguinAgent : Agent
         transform.Rotate(transform.up * turnAmount * turnSpeed * Time.fixedDeltaTime);
 
         // Apply a tiny negative reward every step to encourage action
-        if (maxStep > 0) AddReward(-1f / maxStep);
+        if (MaxStep > 0) AddReward(-1f / MaxStep);
     }
 
     /// <summary>
@@ -66,7 +67,7 @@ public class PenguinAgent : Agent
     /// Behavior Type to "Heuristic Only" in the Behavior Parameters inspector.
     /// </summary>
     /// <returns>A vectorAction array of floats that will be passed into <see cref="AgentAction(float[])"/></returns>
-    public override float[] Heuristic()
+    public override void Heuristic(float[] actionsOut)
     {
         float forwardAction = 0f;
         float turnAction = 0f;
@@ -87,35 +88,35 @@ public class PenguinAgent : Agent
         }
 
         // Put the actions into an array and return
-        return new float[] { forwardAction, turnAction };
+        actionsOut = new float[] { forwardAction, turnAction };
     }
 
     /// <summary>
     /// Reset the agent and area
     /// </summary>
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         isFull = false;
         penguinArea.ResetArea();
-        feedRadius = Academy.Instance.FloatProperties.GetPropertyWithDefault("feed_radius", 0f);
+        feedRadius = Academy.Instance.EnvironmentParameters.GetWithDefault("feed_radius", 0f);
     }
 
     /// <summary>
     /// Collect all non-Raycast observations
     /// </summary>
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
         // Whether the penguin has eaten a fish (1 float = 1 value)
-        AddVectorObs(isFull);
+        sensor.AddObservation(isFull);
 
         // Distance to the baby (1 float = 1 value)
-        AddVectorObs(Vector3.Distance(baby.transform.position, transform.position));
+        sensor.AddObservation(Vector3.Distance(baby.transform.position, transform.position));
 
         // Direction to baby (1 Vector3 = 3 values)
-        AddVectorObs((baby.transform.position - transform.position).normalized);
+        sensor.AddObservation((baby.transform.position - transform.position).normalized);
 
         // Direction penguin is facing (1 Vector3 = 3 values)
-        AddVectorObs(transform.forward);
+        sensor.AddObservation(transform.forward);
 
         // 1 + 1 + 3 + 3 = 8 total values
     }
@@ -125,7 +126,7 @@ public class PenguinAgent : Agent
         // Request a decision every 5 steps. RequestDecision() automatically calls RequestAction(),
         // but for the steps in between, we need to call it explicitly to take action using the results
         // of the previous decision
-        if (GetStepCount() % 5 == 0)
+        if (StepCount % 5 == 0)
         {
             RequestDecision();
         }
@@ -198,7 +199,7 @@ public class PenguinAgent : Agent
 
         if (penguinArea.FishRemaining <= 0)
         {
-            Done();
+            EndEpisode();
         }
     }
 }
